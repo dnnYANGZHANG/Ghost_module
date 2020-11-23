@@ -38,10 +38,17 @@ We will do the following comparations between the belowing 3 networks :
 
 
 ## Usage
-### How to run the code:
-
+### How to Train from Scratch:
 ```sh
 $ python cifar10.py 
+```
+### How to train from checkpoint
+```sh
+$ 待补充
+```
+### How to evaluate 
+```sh
+$ 待补充
 ```
 
 Note: 
