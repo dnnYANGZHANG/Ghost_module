@@ -40,7 +40,7 @@ We will do the following comparations between the belowing 3 networks :
 ## Usage
 ### How to Train from Scratch:
 ```sh
-$ python cifar10.py 
+$ python train.py 
 ```
 ### How to train from checkpoint
 ```sh
