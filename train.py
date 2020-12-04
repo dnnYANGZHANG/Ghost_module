@@ -6,18 +6,22 @@ import torch.backends.cudnn as cudnn
 
 import torchvision
 import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
 
 import os
 import time
 
 from models import *
 from vgg_ghost import *
+from vgg_ghost_v2 import *
+from vgg_ghost_v3 import *
 from torchsummary import summary
 
 #device = 'cpu' if torch.cuda.is_available() else 'cuda'
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+Accuracy_list=[]
 
 # init
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
@@ -40,10 +44,10 @@ def Data_init():
     ])
 
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
 
     testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=64, shuffle=False, num_workers=2)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
     return trainloader,testloader
@@ -64,7 +68,9 @@ def Model_init():
     # net = ShuffleNetV2(1)
     # net = EfficientNetB0()
     #net = VGG('VGG16')
-    net = VGG_ghost('VGG16')
+    #net = VGG_ghost('VGG16')
+    net = VGG_ghost_v2('VGG16_Ghost_bottle')
+    #net = VGG_ghost_v3('VGG16_Ghost_bottle')
 
     net = net.to(device)
 
@@ -119,6 +125,7 @@ def test(epoch,net):
             correct += predicted.eq(targets).sum().item()
 
         print('TestLoss: %.3f | TestAcc: %.3f%% (%d/%d)' % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        Accuracy_list.append(100.*correct/total)
 
     # Save checkpoint.
     acc = 100.*correct/total
@@ -165,7 +172,13 @@ if __name__ == '__main__':
     net = Model_init()
     optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     summary(net, (3, 32, 32))
-    for epoch in range(start_epoch, start_epoch+1):
+    for epoch in range(start_epoch, start_epoch+50):
         train(epoch,net)
         test(epoch,net)
         print(best_acc)
+    x1 = range(0, 50)
+    y1 = Accuracy_list
+    plt.plot(x1, y1, 'y-')
+    plt.title('Accuracy trend')
+    plt.ylabel('Accuracy')
+    plt.show()
