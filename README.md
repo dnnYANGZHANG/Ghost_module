@@ -63,12 +63,12 @@ We use [Cifar10](http://www.cs.toronto.edu/~kriz/cifar.html) dataset in this cou
 
 ## Enviroment
 - Nvidia 2070
-
-## Brief Result
-vgg_ghost_2.py = new ghost module
-vgg_ghost_v2_3.py = original ghost bottleneck
-vgg_ghost_v4.py = V022 + V023 ghost bottleneck
-新增了torchprof，用于查看lantecy，直接加入在了train中，在初始化时会输出。
+ 
+## Brief Result  
+vgg_ghost_2.py = new ghost module  
+vgg_ghost_v2_3.py = original ghost bottleneck   
+vgg_ghost_v4.py = V022 + V023 ghost bottleneck  
+新增了torchprof，用于查看lantecy，直接加入在了train中，在初始化时会输出。  
 
 ## Citation
   
