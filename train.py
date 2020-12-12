@@ -1,10 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim import lr_scheduler
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 
 import torchvision
+import torchprof
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 
@@ -13,9 +15,15 @@ import time
 
 from models import *
 from vgg_ghost import *
+from vgg_ghost_2 import *
 from vgg_ghost_v2 import *
+from vgg_ghost_v2_2 import *
+from vgg_ghost_v2_3 import *
 from vgg_ghost_v3 import *
+from vgg_ghost_v4 import *
 from torchsummary import summary
+from thop import profile
+from thop import clever_format
 
 #device = 'cpu' if torch.cuda.is_available() else 'cuda'
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -69,8 +77,23 @@ def Model_init():
     # net = EfficientNetB0()
     #net = VGG('VGG16')
     #net = VGG_ghost('VGG16')
-    net = VGG_ghost_v2('VGG16_Ghost_bottle')
+    #net = VGG_ghost_2('VGG16')
+    #net = VGG_ghost_v2('VGG16_Ghost_bottle')
+    #net = VGG_ghost_v2_2('VGG16_Ghost_bottle')
+    net = VGG_ghost_v2_3('VGG16_Ghost_bottle')
     #net = VGG_ghost_v3('VGG16_Ghost_bottle')
+    #net = VGG_ghost_v4('VGG16_Ghost_bottle')
+
+    '''
+    Flops
+    '''
+    '''
+    input = torch.randn(1, 3, 32, 32)
+    flops, params = profile(net, inputs=(input,))
+    flops, params = clever_format([flops, params], "%.3f")
+    print('flops is {}'.format(flops))
+    print('params is {}'.format(params))
+    '''
 
     net = net.to(device)
 
@@ -78,9 +101,17 @@ def Model_init():
         net = torch.nn.DataParallel(net)
         cudnn.benchmark = True
 
+    ''' Here to see torchprof'''
+    x = torch.rand([1, 3, 32, 32]).cuda()
+    # `profile_memory` was added in PyTorch 1.6, this will output a runtime warning if unsupported.
+    with torchprof.Profile(net, use_cuda=True, profile_memory=True) as prof:
+        net(x)
+    # equivalent to `print(prof)` and `print(prof.display())`
+    #print(prof.display(show_events=False))
+    print(prof.display(show_events=True))
+    '''Done'''
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(net.parameters(),lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
     return net
 
 # Training
@@ -99,7 +130,6 @@ def train(epoch,net):
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
-
         train_loss += loss.item()
         _, predicted = outputs.max(1)
         total += targets.size(0)
@@ -170,15 +200,21 @@ def load_evaluate():
 if __name__ == '__main__':
     trainloader,testloader = Data_init()
     net = Model_init()
-    optimizer = optim.Adam(net.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-    summary(net, (3, 32, 32))
-    for epoch in range(start_epoch, start_epoch+50):
+    optimizer = optim.Adam(net.parameters(), lr=0.01, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+    #lr = scheduler.get_last_lr()
+    #summary(net, (3, 32, 32))
+    for epoch in range(70):
         train(epoch,net)
         test(epoch,net)
         print(best_acc)
-    x1 = range(0, 50)
+        lr = scheduler.get_last_lr()
+        scheduler.step()
+        #print(optimizer)
+    x1 = range(0, 70)
     y1 = Accuracy_list
     plt.plot(x1, y1, 'y-')
     plt.title('Accuracy trend')
     plt.ylabel('Accuracy')
     plt.show()
+    print(y1)
