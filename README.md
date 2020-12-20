@@ -1,4 +1,4 @@
-# Use different GhostModules to Accelarate Neural Networks  
+# Use ShuffleGhost to Accelarate Neural Networks  
 The group project of  CMSC5743-Efficient Computing of Deep Neural Networks  2020fall
 
 ## Introduction
